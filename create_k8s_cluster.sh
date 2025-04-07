@@ -5,7 +5,7 @@ CILIUM_NAMESPACE="kube-system"
 KIND_CONFIG_FILE="configs/kind-config.yaml"  # Path to your Kind cluster configuration file
 CLUSTER_NAME="cilium-demo"           # Name of the Kind cluster
 MAX_RETRIES=10                       # Maximum retries for Cilium installation
-UPDATE_CLI=false                     # Flag to update CLI tools
+UPGRADE_CLI=false                     # Flag to update CLI tools
 
 # Default versions
 DEFAULT_KIND_VERSION="v0.22.0"
@@ -51,7 +51,7 @@ fi
 # Parse command-line arguments
 while [[ "$#" -gt 0 ]]; do
     case $1 in
-        --update) UPDATE_CLI=true ;;
+        --upgrade) UPGRADE_CLI=true ;;
         *) echo "Unknown parameter passed: $1"; exit 1 ;;
     esac
     shift
@@ -65,7 +65,7 @@ is_kind_installed() {
 # Function to install/update Kind
 install_kind() {
     local version=$DEFAULT_KIND_VERSION
-    if $UPDATE_CLI; then
+    if $UPGRADE_CLI; then
         version=$LATEST_KIND_VERSION
     fi
     echo "Installing/updating Kind to version $version..."
@@ -78,10 +78,10 @@ install_kind() {
 # Function to install/update Helm
 install_helm() {
     local version=$DEFAULT_HELM_VERSION
-    if $UPDATE_CLI; then
+    if $UPGRADE_CLI; then
         version=$LATEST_HELM_VERSION
     fi
-    if $UPDATE_CLI || ! command -v helm > /dev/null 2>&1; then
+    if $UPGRADE_CLI || ! command -v helm > /dev/null 2>&1; then
         echo "Installing/updating Helm to version $version..."
         curl -Lo get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
         chmod +x get_helm.sh
@@ -89,7 +89,7 @@ install_helm() {
         rm get_helm.sh
         HELM_VERSION=$version
     else
-        echo "Helm is already installed and --update flag is not provided. Skipping update."
+        echo "Helm is already installed and --upgrade flag is not provided. Skipping update."
         HELM_VERSION=$(helm version --short | cut -d " " -f 2)
     fi
 }
@@ -97,14 +97,14 @@ install_helm() {
 # Function to install/update kubectl
 install_kubectl() {
     local version=$LATEST_KUBECTL_VERSION
-    if $UPDATE_CLI || ! command -v kubectl > /dev/null 2>&1; then
+    if $UPGRADE_CLI || ! command -v kubectl > /dev/null 2>&1; then
         echo "Installing/updating kubectl to version $version..."
         curl -LO "https://dl.k8s.io/release/${version}/bin/linux/amd64/kubectl"
         chmod +x kubectl
         sudo mv kubectl /usr/local/bin/kubectl
         KUBECTL_VERSION=$version
     else
-        echo "kubectl is already installed and --update flag is not provided. Skipping update."
+        echo "kubectl is already installed and --upgrade flag is not provided. Skipping update."
         KUBECTL_VERSION=$(kubectl version --client --short | cut -d " " -f 3)
     fi
     echo "KUBECTL_VERSION is set to $KUBECTL_VERSION"
